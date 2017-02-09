@@ -10,6 +10,16 @@ public class Cpu {
   private int ip = 0;
   private int sp = 0;
   private boolean flag = false;
+  
+  public void decSp() {
+    if (sp == 0) sp = 64;
+    sp = sp - 1;
+    }
+  
+  public void incIp() {
+    ip++;
+    if (ip == 64) ip = 0;
+    }
 
   public int getA() {
     return a;

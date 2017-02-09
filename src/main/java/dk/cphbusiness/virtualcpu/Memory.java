@@ -17,8 +17,17 @@ public class Memory {
     data[index] = (byte)(value & 0b1111_1111);
     }
   
+  public String binary(int value) {
+    String result = "";
+    for (int i = 7; i >= 0; i--) {
+      result += (value & (1 << i)) == 0 ? "0" : "1";
+      }
+    return result;
+    }
+  
+  
   public void print(PrintStream out, int index) {
-    out.printf("%2d: %4d   ", index, get(index));
+    out.printf("%2d: %4d %s   ", index, get(index), binary(get(index)));
     }
   
   public void print(PrintStream out) {
