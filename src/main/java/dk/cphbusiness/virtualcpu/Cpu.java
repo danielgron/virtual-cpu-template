@@ -68,6 +68,11 @@ public class Cpu {
     out.printf("SP: %4d\n", sp);
     out.println("F:  "+flag);
     }
+
+    public void incSp() {
+        sp++;
+        if (sp== Memory.SIZE) sp=0;
+        }
     
   }
   
