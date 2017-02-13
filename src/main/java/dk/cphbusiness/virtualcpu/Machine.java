@@ -3,21 +3,31 @@ package dk.cphbusiness.virtualcpu;
 import java.io.PrintStream;
 
 public class Machine {
-
+    
     private Cpu cpu = new Cpu();
     private Memory memory = new Memory();
     private boolean halt = false;
-
+    Program program;
+    
     public void load(Program program) {
+        this.program = program;
         int index = 0;
         for (int instr : program) {
             memory.set(index++, instr);
         }
     }
 
+    public void run() {
+        while (!halt) {
+            tick();
+            print(System.out);
+        }
+        
+    }
+    
     public void tick() {
         int instr = memory.get(cpu.getIp());
-
+        
         switch (instr) {
             //0000 0000	NOP	IP++
             case 0b0000_0000:
@@ -119,7 +129,7 @@ public class Machine {
         // Special cases
 //0001 000r	PUSH r	[--SP] ← r; IP++ 
         if ((instr & 0b1111_1110) == 0b0001_0000) {
-
+            
             cpu.decSp();
             int r = (instr & 0b0000_1000) >> 3;
             if (r == cpu.A) {
@@ -131,8 +141,8 @@ public class Machine {
         }
         //0001 001r	POP r	r ← [SP++]; IP++
         if ((instr & 0b1111_1110) == 0b0001_0010) {
-            int r = (instr & 0b0000_1000) >> 3;
-
+            int r = (instr & 0b0000_0001);
+            
             if (r == cpu.A) {
                 cpu.setA(memory.get(cpu.getSp()));
             } else {
@@ -142,20 +152,15 @@ public class Machine {
             cpu.incIp();
         }
         // 0001 1ooo	RTN +o	IP ← [SP++]; SP += o; IP++
-        if ((instr & 0b1111_1110) == 0b0001_0010) {
-            int r = (instr & 0b0000_1000) >> 3;
-
-            if (r == cpu.A) {
-                cpu.setA(memory.get(cpu.getSp()));
-            } else {
-                cpu.setB(memory.get(cpu.getSp()));
-            }
+        if ((instr & 0b1111_1000) == 0b0001_1000) {
+            int o = (instr & 0b0000_0111);
+            cpu.setIp(memory.get(cpu.getSp()));
             cpu.incSp();
+            cpu.setSp(cpu.getSp()+o);
             cpu.incIp();
         }
-        
 
-            // 0010 r ooo	MOV r o	   [SP + o] ← r; IP++
+        // 0010 r ooo	MOV r o	   [SP + o] ← r; IP++
         if ((instr & 0b1111_0000) == 0b0010_0000) {
 
             // 0010 1 011 MOV B (=1) +3  [SP +3] // Move register B to memory position of SP with offset 3
@@ -185,15 +190,15 @@ public class Machine {
             }
             cpu.setIp(cpu.getIp() + 1);
         }
-                // 0011 ooor	MOV o r	r ← [SP + o]; IP++
+        // 0011 ooor	MOV o r	r ← [SP + o]; IP++
         if ((instr & 0b1111_0000) == 0b0011_0000) {
             int r = (instr & 0b0000_0001);
             int o = (instr & 0b0000_1110) >> 1;
-
+            
             if (r == cpu.A) {
-                cpu.setA(memory.get(cpu.getSp()+o));
+                cpu.setA(memory.get(cpu.getSp() + o));
             } else {
-                cpu.setB(memory.get(cpu.getSp()+o));
+                cpu.setB(memory.get(cpu.getSp() + o));
             }
             cpu.incIp();
         }
@@ -201,7 +206,7 @@ public class Machine {
         if ((instr & 0b1100_0000) == 0b0100_0000) {
             int r = (instr & 0b0000_0001);
             int v = (instr & 0b0011_1110) >> 1;
-
+            
             if (r == cpu.A) {
                 cpu.setA(v);
             } else {
@@ -211,29 +216,33 @@ public class Machine {
         }
         // 10aa aaaa	JMP #a	if F then IP ← a else IP++
         if ((instr & 0b1100_0000) == 0b1000_0000) {
-            if (cpu.isFlag()){
+            if (cpu.isFlag()) {
                 cpu.setIp(instr & 0b00111111);
+            } else {
+                cpu.incIp();
             }
-            else cpu.incIp();
         }
         //11aa aaaa	CALL #a	if F then [--SP] ← IP; IP ← a else IP++
         if ((instr & 0b1100_0000) == 0b1100_0000) {
-            if (cpu.isFlag()){
+            if (cpu.isFlag()) {
                 cpu.decSp();
-                cpu.setSp(cpu.getIp());
+                memory.set(cpu.getSp(), cpu.getIp());
                 cpu.setIp(instr & 0b00111111);
+            } else {
+                cpu.incIp();
             }
-            else cpu.incIp();
         }
         
-        
-        
     }
-
+    
     public void print(PrintStream out) {
-        memory.print(out);
+        out.println();
+        out.println();
+        out.println(program.getString(cpu.getIp()));
+        memory.print(out, cpu.getIp(), cpu.getSp());
         out.println("-------------");
         cpu.print(out);
+        
     }
-
+    
 }

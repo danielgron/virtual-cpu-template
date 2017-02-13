@@ -1,0 +1,6 @@
+MOV -5 A
+PUSH A
+MOV -4 B
+PUSH B
+MUL
+HALT

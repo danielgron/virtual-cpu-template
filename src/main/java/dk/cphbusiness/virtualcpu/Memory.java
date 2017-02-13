@@ -26,16 +26,18 @@ public class Memory {
     }
   
   
-  public void print(PrintStream out, int index) {
-    out.printf("%2d: %4d %s   ", index, get(index), binary(get(index)));
+  public void print(PrintStream out, int index, int ip, int sp) {
+      if (index == ip || index == sp)
+    out.printf("==>%2d: %4d %s    ", index, get(index), binary(get(index)));
+      else out.printf("   %2d: %4d %s    ", index, get(index), binary(get(index)));
     }
   
-  public void print(PrintStream out) {
+  public void print(PrintStream out, int ip, int sp) {
     for (int index = 0; index < 16; index++) {
-      print(out, index);
-      print(out, 16 + index);
-      print(out, 32 + index);
-      print(out, 48 + index);
+      print(out, index, ip, sp);
+      print(out, 16 + index, ip, sp);
+      print(out, 32 + index, ip, sp);
+      print(out, 48 + index, ip, sp);
       out.println();
       }
     }

@@ -1,6 +1,7 @@
 package dk.cphbusiness.virtualcpu;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class Program implements Iterable<Integer> {
   private String[] lines;
@@ -8,6 +9,10 @@ public class Program implements Iterable<Integer> {
   public Program(String... lines) {
     this.lines = lines;
     }
+  
+  public Program(List<String> lines){
+      this.lines= lines.toArray(new String[lines.size()]);
+  }
   
   public int get(int index) {
     String line = lines[index];
@@ -17,6 +22,9 @@ public class Program implements Iterable<Integer> {
     else return getFromCommand(line);
     
     }
+  public String getString(int index){
+      return lines[index];
+  }
   
   private int getFromCommand(String line){
       // 0000 0000	NOP	
@@ -62,8 +70,14 @@ public class Program implements Iterable<Integer> {
       if (line.equals("INC")) return 0b0001_0110;
       // 0001 0111	DEC	
       if (line.equals("DEC")) return 0b0001_0111;
-      // 0001 0100	MOV A B	
-      if (line.equals("MOV A B")) return 0b0001_0100;
+     
+      if (line.startsWith("RTN")){
+          String[] parts = line.split(" ");
+          return 0b0001_1000 | Integer.parseInt(parts[1]);
+      }
+      
+      if (line.startsWith("JMP"))return 0b1000_0000 | Integer.parseInt(line.split(" ")[1]);
+      if (line.startsWith("CALL"))return 0b1100_0000 | Integer.parseInt(line.split(" ")[1]);
       
       
       
@@ -77,15 +91,21 @@ public class Program implements Iterable<Integer> {
       else if (parts[2].equals("A") || parts[2].equals("B")){
           int r = parts[1].equals("B") ? 1 : 0;
           // 2 interpretations?!
-          if (parts[1].startsWith("+") || parts[1].startsWith("-")){
+          if (parts[1].startsWith("+")){
               return 0b0011_0000 | Integer.parseInt(parts[1])<<1 | r;
           }
-          else return 0b01000000 | Integer.parseInt(parts[1])<<1 | r;
+          else return 0b01000000 | convertValue2Complement(parts[1])<<1 | r;
           
       }
       throw new UnsupportedOperationException("Don't know "+line);
       }
       else throw new UnsupportedOperationException("Don't know "+line);
+  }
+  
+  private int convertValue2Complement(String number){
+      int num = Integer.parseInt(number);
+      if (num<0) return 32-Math.abs(num);
+      return num;
   }
 
   @Override
@@ -108,6 +128,8 @@ public class Program implements Iterable<Integer> {
       }
     
     }
+  
+  
   
   
 
