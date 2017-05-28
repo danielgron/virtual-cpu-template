@@ -23,7 +23,8 @@ public class Program implements Iterable<Integer> {
     
     }
   public String getString(int index){
-      return lines[index];
+      if (index<lines.length)return lines[index];
+      return "Dynamicly created code";
   }
   
   private int getFromCommand(String line){
@@ -89,7 +90,7 @@ public class Program implements Iterable<Integer> {
       return 0b0010_0000 | (r << 3) | o;
       }
       else if (parts[2].equals("A") || parts[2].equals("B")){
-          int r = parts[1].equals("B") ? 1 : 0;
+          int r = parts[2].equals("B") ? 1 : 0;
           // 2 interpretations?!
           if (parts[1].startsWith("+")){
               return 0b0011_0000 | Integer.parseInt(parts[1])<<1 | r;
